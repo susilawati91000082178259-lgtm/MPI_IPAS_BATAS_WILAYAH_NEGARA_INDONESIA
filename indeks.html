@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batas Wilayah Indonesia - MPI IPAS MI</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] },
+                    colors: {
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+                        gold: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body { background-color: #f0fdf4; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
+        .slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .float-anim { animation: float 3s ease-in-out infinite; }
+        .pulse-anim { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .9; transform: scale(1.02); } }
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+
+        .glass-dark { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
+        .arab-text { font-family: 'Amiri', serif; font-size: 1.75rem; line-height: 2.5rem; text-align: right; direction: rtl; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+
+        .map-line { stroke-dasharray: 100; stroke-dashoffset: 100; animation: dash 3s linear infinite; }
+
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #report-content { box-shadow: none; padding: 0; }
+        }
+
+        /* Match / Sort Interactive Styles */
+        .interactive-item { cursor: pointer; transition: all 0.2s; user-select: none; }
+        .interactive-item.selected { border-color: #f59e0b; background-color: #fef3c7; transform: scale(1.02); }
+        .interactive-item.matched { opacity: 0.6; pointer-events: none; border-color: #10b981; background-color: #d1fae5; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased h-screen w-screen flex justify-center items-center">
+
+    <!-- Notifikasi -->
+    <div id="notif-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- MAIN CONTAINER -->
+    <div id="app" class="w-full max-w-5xl h-full md:h-[95vh] md:rounded-3xl shadow-2xl bg-white overflow-hidden relative flex flex-col">
+        
+        <!-- 1. SPLASH SCREEN -->
+        <div id="splash" class="absolute inset-0 bg-emerald-700 flex flex-col items-center justify-center z-50 transition-opacity duration-500">
+            <i class="fas fa-globe-asia text-7xl text-white float-anim mb-4"></i>
+            <h1 class="text-3xl md:text-5xl font-bold text-white text-center px-4 tracking-wide">MPI IPAS MI</h1>
+            <div class="w-48 h-2 bg-emerald-900 rounded-full mt-6 overflow-hidden">
+                <div class="w-full h-full bg-gold-400 rounded-full animate-[pulse_1s_ease-in-out_infinite]"></div>
+            </div>
+        </div>
+
+        <!-- 2. COVER PAGE -->
+        <div id="cover" class="hidden w-full h-full flex flex-col relative bg-emerald-50">
+            <!-- SVG Map Animation -->
+            <div class="absolute inset-0 overflow-hidden opacity-20 pointer-events-none flex items-center justify-center">
+                <svg width="100%" height="100%" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M200,200 Q300,150 400,250 T600,200" fill="none" stroke="#059669" stroke-width="4" class="map-line"/>
+                    <!-- Simplified World/Indonesia Map shapes -->
+                    <path d="M250,180 Q280,160 300,190 Q270,210 250,180 Z" fill="#047857"/> <!-- Sumatra -->
+                    <path d="M320,220 Q350,200 370,230 Q340,240 320,220 Z" fill="#047857"/> <!-- Java -->
+                    <path d="M330,150 Q370,120 400,160 Q380,200 330,150 Z" fill="#047857"/> <!-- Kalimantan -->
+                    <path d="M420,170 Q450,140 470,190 Q440,210 420,170 Z" fill="#047857"/> <!-- Sulawesi -->
+                    <path d="M500,200 Q550,180 600,220 Q550,250 500,200 Z" fill="#047857"/> <!-- Papua -->
+                    <circle cx="200" cy="100" r="150" fill="#10b981" opacity="0.1" class="pulse-anim"/>
+                </svg>
+            </div>
+
+            <div class="relative z-10 flex-1 flex flex-col items-center justify-center p-6 text-center">
+                <span class="bg-emerald-200 text-emerald-900 text-xs font-bold px-4 py-1.5 rounded-full mb-6 slide-up shadow-sm">Kelas V / Fase B - IPAS</span>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-emerald-900 leading-tight mb-2 slide-up" style="animation-delay: 0.1s;">Batas Wilayah</h1>
+                <h2 class="text-3xl md:text-5xl font-bold text-emerald-600 mb-10 slide-up" style="animation-delay: 0.2s;">Negara Indonesia</h2>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-lg mx-auto slide-up" style="animation-delay: 0.3s;">
+                    <button onclick="toggleModal('modal-pengembang')" class="flex-1 bg-white border-2 border-emerald-500 text-emerald-700 font-bold py-3 px-6 rounded-2xl hover:bg-emerald-50 transition-colors shadow-sm"><i class="fas fa-user-tie mr-2"></i> Pengembang</button>
+                    <button onclick="toggleModal('modal-tujuan')" class="flex-1 bg-white border-2 border-emerald-500 text-emerald-700 font-bold py-3 px-6 rounded-2xl hover:bg-emerald-50 transition-colors shadow-sm"><i class="fas fa-bullseye mr-2"></i> Tujuan</button>
+                </div>
+                
+                <button onclick="showScreen('login')" class="mt-8 bg-gradient-to-r from-gold-400 to-gold-600 text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg hover:shadow-xl transform transition-transform pulse-anim slide-up" style="animation-delay: 0.4s;">
+                    MULAI BELAJAR <i class="fas fa-play ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Floating Slides (Modals) -->
+        <div id="modal-pengembang" class="hidden absolute inset-0 glass-dark z-40 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center scale-95 transition-transform duration-300">
+                <h3 class="text-xl font-bold text-emerald-900 mb-4 border-b pb-2">Informasi Pengembang</h3>
+                <div class="w-32 h-32 mx-auto rounded-full border-4 border-emerald-100 p-1 mb-4 overflow-hidden shadow-inner">
+                    <img src="https://iili.io/nvQtoqF.md.png" alt="Pengembang" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'%2310b981\'/><text x=\'50\' y=\'65\' font-family=\'Arial\' font-size=\'40\' fill=\'white\' text-anchor=\'middle\'>S</text></svg>';" class="w-full h-full object-cover rounded-full">
+                </div>
+                <h4 class="text-2xl font-bold text-gray-800">SUSILAWATI, M,Pd</h4>
+                <p class="text-emerald-600 font-medium mt-1"><i class="fas fa-school mr-1"></i> MI Salafiyah Syafiiyah</p>
+                <p class="text-xs text-gray-500 mt-2 mb-6 break-words">susilawati_91000082178259@<br>madrasah.kemenag.go.id</p>
+                <button onclick="toggleModal('modal-pengembang')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl mb-2">Kembali ke Cover</button>
+                <!-- TAMBAHAN: Tombol Sinkronisasi Data Soal -->
+                <button onclick="syncDataSoal()" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-3 px-4 rounded-xl shadow-sm text-sm"><i class="fas fa-cloud-upload-alt mr-1"></i> Sinkronisasi Data Soal ke DB</button>
+            </div>
+        </div>
+
+        <div id="modal-tujuan" class="hidden absolute inset-0 glass-dark z-40 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative scale-95 transition-transform duration-300">
+                <h3 class="text-xl font-bold text-emerald-900 mb-4 border-b pb-2 flex items-center gap-2"><i class="fas fa-bullseye text-gold-500"></i> Tujuan & Nilai Pembelajaran</h3>
+                <div class="bg-emerald-50 rounded-xl p-4 mb-4 border-l-4 border-emerald-500 text-gray-700 text-sm md:text-base font-medium">
+                    Melalui kegiatan pengamatan peta dan diskusi kelompok, peserta didik mampu mengidentifikasi batas-batas wilayah Indonesia (utara, selatan, barat, timur) baik daratan maupun lautan dengan benar, serta menunjukkannya pada peta secara tepat.
+                </div>
+                <div class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-100">
+                    <p class="arab-text text-amber-900 mb-2">يَا أَيُّهَا النَّاسُ إِنَّا خَلَقْنَاكُمْ مِنْ ذَكَرٍ وَأُنْثَىٰ وَجَعَلْنَاكُمْ شُعُوبًا وَقَبَائِلَ لِتَعَارَفُوا</p>
+                    <p class="text-xs md:text-sm text-gray-600 italic mb-2">"Hai manusia, sesungguhnya Kami menciptakan kamu... dan menjadikan kamu berbangsa-bangsa dan bersuku-suku supaya kamu saling kenal-mengenal." (QS. Al-Hujurat: 13)</p>
+                    <div class="mt-2 text-xs md:text-sm text-amber-800 bg-amber-100/50 p-2 rounded font-medium">
+                        <strong>KBC (Kurikulum Berbasis Cinta):</strong> Batas negara bukan untuk memusuhi, melainkan merawat kedaulatan tanah air sekaligus menjalin persaudaraan global (Ukhuwah Insaniyah) dengan negara tetangga.
+                    </div>
+                </div>
+                <button onclick="toggleModal('modal-tujuan')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl">Kembali ke Cover</button>
+            </div>
+        </div>
+
+        <!-- 3. LOGIN FORM -->
+        <div id="login" class="hidden absolute inset-0 z-20 bg-gray-50 flex items-center justify-center p-6">
+            <div class="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full slide-up border-t-8 border-emerald-500">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 text-emerald-600 text-2xl"><i class="fas fa-user-graduate"></i></div>
+                    <h2 class="text-2xl font-bold text-gray-800">Identitas Siswa</h2>
+                </div>
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nama Lengkap</label>
+                        <input type="text" id="inp-nama" placeholder="Masukkan nama..." class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Kelas</label>
+                        <select id="inp-kelas" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none" required>
+                            <option value="" disabled selected>Pilih Kelas</option>
+                            <option value="V-A">Kelas V - A</option>
+                            <option value="V-B">Kelas V - B</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl mt-2 transition-colors">Masuk <i class="fas fa-arrow-right ml-1"></i></button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 4. PANDUAN (SLIDER) -->
+        <div id="panduan" class="hidden absolute inset-0 z-20 bg-white flex flex-col">
+            <div class="p-6 md:p-8 flex-1 flex flex-col items-center justify-center text-center max-w-3xl mx-auto w-full">
+                <h2 class="text-2xl md:text-3xl font-bold text-emerald-800 mb-2">Selamat Datang, <span id="welcome-name"></span>!</h2>
+                <p class="text-gray-500 mb-6">Pahami panduan belajar berikut sebelum memulai.</p>
+                
+                <div class="w-full bg-emerald-50 rounded-2xl p-6 md:p-8 min-h-[250px] flex items-center justify-center border border-emerald-100 relative">
+                    <div id="slide-pan-0" class="absolute inset-0 flex flex-col items-center justify-center p-6 fade-in">
+                        <i class="fas fa-book-open text-5xl text-blue-500 mb-4"></i>
+                        <h3 class="font-bold text-lg mb-2">1. Menu BELAJAR (Materi)</h3>
+                        <p class="text-sm text-gray-700">Pelajari 6 slide materi mendalam tentang batas wilayah pada peta dunia. Selesaikan aktivitas interaktif di akhir setiap slide untuk membuka menu Bermain.</p>
+                    </div>
+                    <div id="slide-pan-1" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 fade-in">
+                        <i class="fas fa-gamepad text-5xl text-amber-500 mb-4"></i>
+                        <h3 class="font-bold text-lg mb-2">2. Menu BERMAIN (Gamifikasi)</h3>
+                        <p class="text-sm text-gray-700">Selesaikan 10 tantangan literasi & numerasi interaktif (Menjodohkan, Mengurutkan, dll) berdasarkan bacaan dan peta. Lulus tahap ini membuka menu Berlatih.</p>
+                    </div>
+                    <div id="slide-pan-2" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 fade-in">
+                        <i class="fas fa-tasks text-5xl text-rose-500 mb-4"></i>
+                        <h3 class="font-bold text-lg mb-2">3. Menu BERLATIH & LAPORAN</h3>
+                        <p class="text-sm text-gray-700">Kerjakan 10 soal asesmen bertingkat (HOTS). Setelah selesai, kamu dapat mengunduh Laporan Hasil Belajar PDF otomatis sebagai bukti belajarmu.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 mt-8">
+                    <button onclick="gantiPanduan(-1)" id="btn-pan-prev" class="hidden bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-full">Kembali</button>
+                    <div class="flex gap-2" id="pan-dots">
+                        <div class="w-3 h-3 rounded-full bg-emerald-600"></div>
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                    </div>
+                    <button onclick="gantiPanduan(1)" id="btn-pan-next" class="bg-emerald-600 text-white font-bold py-2 px-6 rounded-full">Selanjutnya</button>
+                    <button onclick="showScreen('menu')" id="btn-pan-masuk" class="hidden bg-gold-500 text-white font-bold py-2 px-6 rounded-full pulse-anim">Masuk Menu Utama</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MENU UTAMA (DASHBOARD) -->
+        <div id="menu" class="hidden absolute inset-0 z-10 bg-gray-50 flex flex-col">
+            <header class="bg-white px-6 py-4 flex justify-between items-center shadow-sm border-b shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold text-lg" id="ava-inisial">A</div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-sm leading-tight" id="dash-nama">Nama</h3>
+                        <p class="text-xs text-gray-500" id="dash-kelas">Kelas</p>
+                    </div>
+                </div>
+                <div class="text-emerald-700 font-bold text-sm bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100"><i class="fas fa-leaf"></i> KBC MI</div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto w-full">
+                    
+                    <div onclick="bukaModul('belajar')" class="cursor-pointer bg-white rounded-3xl p-6 shadow-md hover:shadow-lg border-2 border-transparent hover:border-blue-400 transition-all text-center flex flex-col">
+                        <div class="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-book-open text-4xl text-blue-500"></i></div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">BELAJAR</h3>
+                        <p class="text-xs text-gray-500 mb-4 flex-1">Materi interaktif batas wilayah & Peta Dunia.</p>
+                        <div class="bg-blue-100 text-blue-700 py-1.5 rounded-full text-xs font-bold"><i class="fas fa-unlock"></i> TERBUKA</div>
+                    </div>
+
+                    <div id="card-bermain" onclick="bukaModul('bermain')" class="relative cursor-not-allowed opacity-70 bg-white rounded-3xl p-6 shadow border-2 border-gray-200 text-center flex flex-col">
+                        <div class="absolute inset-0 bg-gray-50/60 rounded-3xl z-10 flex items-center justify-center" id="lock-bermain"><div class="bg-gray-800 text-white p-3 rounded-full"><i class="fas fa-lock"></i></div></div>
+                        <div class="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-gamepad text-4xl text-amber-500"></i></div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">BERMAIN</h3>
+                        <p class="text-xs text-gray-500 mb-4 flex-1">Tantangan gamifikasi literasi & numerasi.</p>
+                        <div id="status-bermain" class="bg-gray-200 text-gray-600 py-1.5 rounded-full text-xs font-bold"><i class="fas fa-lock"></i> TERKUNCI</div>
+                    </div>
+
+                    <div id="card-berlatih" onclick="bukaModul('berlatih')" class="relative cursor-not-allowed opacity-70 bg-white rounded-3xl p-6 shadow border-2 border-gray-200 text-center flex flex-col">
+                        <div class="absolute inset-0 bg-gray-50/60 rounded-3xl z-10 flex items-center justify-center" id="lock-berlatih"><div class="bg-gray-800 text-white p-3 rounded-full"><i class="fas fa-lock"></i></div></div>
+                        <div class="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-tasks text-4xl text-rose-500"></i></div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-1">BERLATIH</h3>
+                        <p class="text-xs text-gray-500 mb-4 flex-1">Asesmen HOTS & Cetak Laporan PDF.</p>
+                        <div id="status-berlatih" class="bg-gray-200 text-gray-600 py-1.5 rounded-full text-xs font-bold"><i class="fas fa-lock"></i> TERKUNCI</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. LAYER BELAJAR -->
+        <div id="modul-belajar" class="hidden absolute inset-0 z-30 bg-white flex flex-col">
+            <div class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+                <button onclick="showScreen('menu')" class="hover:bg-blue-700 p-2 rounded-lg text-sm font-medium"><i class="fas fa-arrow-left"></i> Menu</button>
+                <h2 class="font-bold">Materi Belajar</h2>
+                <div class="text-sm font-bold bg-blue-800 px-3 py-1 rounded-full"><span id="blj-counter">1/6</span></div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50" id="blj-content">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="bg-white border-t p-4 flex justify-between items-center shrink-0">
+                <button id="btn-blj-prev" onclick="navBelajar(-1)" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl font-bold hidden">Kembali</button>
+                <div class="flex-1"></div>
+                <button id="btn-blj-next" onclick="navBelajar(1)" class="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold hidden shadow-md">Selanjutnya <i class="fas fa-chevron-right ml-1"></i></button>
+                <button id="btn-blj-finish" onclick="finishBelajar()" class="px-5 py-2 bg-emerald-600 text-white rounded-xl font-bold hidden shadow-md pulse-anim">Selesai Belajar <i class="fas fa-check ml-1"></i></button>
+            </div>
+        </div>
+
+        <!-- 7. LAYER BERMAIN -->
+        <div id="modul-bermain" class="hidden absolute inset-0 z-30 bg-amber-50 flex flex-col">
+            <div class="bg-amber-500 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+                <button onclick="showScreen('menu')" class="hover:bg-amber-600 p-2 rounded-lg text-sm font-medium"><i class="fas fa-arrow-left"></i> Menu</button>
+                <h2 class="font-bold">Tantangan Bermain</h2>
+                <div class="text-sm font-bold bg-amber-700 px-3 py-1 rounded-full"><span id="brm-counter">1/10</span></div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-6" id="brm-content">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- 8. LAYER BERLATIH -->
+        <div id="modul-berlatih" class="hidden absolute inset-0 z-30 bg-rose-50 flex flex-col">
+            <div class="bg-rose-600 text-white px-4 py-3 flex justify-between items-center shadow-md shrink-0">
+                <div class="w-16"></div>
+                <h2 class="font-bold text-center flex-1">Asesmen Berlatih</h2>
+                <div class="text-sm font-bold bg-rose-800 px-3 py-1 rounded-full w-16 text-center"><span id="brl-counter">1/10</span></div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-6" id="brl-content">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- 9. LAPORAN PDF -->
+        <div id="modul-laporan" class="hidden absolute inset-0 z-40 bg-gray-100 flex flex-col overflow-y-auto p-4 md:p-8">
+            <div class="max-w-3xl w-full mx-auto flex flex-col gap-4">
+                <div class="flex justify-between items-center no-print">
+                    <button onclick="showScreen('menu')" class="bg-white border text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-bold"><i class="fas fa-home mr-2"></i> Menu</button>
+                    <button onclick="cetakPDF()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 shadow-md font-bold"><i class="fas fa-file-pdf mr-2"></i> Unduh PDF</button>
+                </div>
+
+                <div id="report-content" class="bg-white p-8 md:p-12 rounded-xl shadow-lg print-only:shadow-none print-only:p-0">
+                    <div class="border-b-4 border-emerald-600 pb-4 mb-6 flex justify-between items-start">
+                        <div>
+                            <h1 class="text-2xl font-black text-emerald-900 uppercase">Laporan Hasil Belajar</h1>
+                            <h2 class="text-lg text-gray-700 font-bold">MPI IPAS: Batas Wilayah Indonesia</h2>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 font-bold">Pengembang:</p>
+                            <p class="text-sm text-emerald-700 font-bold">SUSILAWATI, M,Pd</p>
+                            <p class="text-xs text-gray-600">MI Salafiyah Syafiiyah</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
+                        <table class="w-full text-sm">
+                            <tr><td class="w-1/3 text-gray-600 font-bold py-1">Nama Siswa</td><td class="font-black text-gray-900" id="rep-nama">: -</td></tr>
+                            <tr><td class="text-gray-600 font-bold py-1">Kelas / Fase</td><td class="font-black text-gray-900" id="rep-kelas">: - / Fase B</td></tr>
+                            <tr><td class="text-gray-600 font-bold py-1">Tanggal Penyelesaian</td><td class="font-black text-gray-900" id="rep-tgl">: -</td></tr>
+                        </table>
+                    </div>
+
+                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-1">1. Rekapitulasi Performa</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 text-center">
+                            <p class="text-amber-800 text-xs font-bold mb-1">SKOR BERMAIN (LITERASI)</p>
+                            <p class="text-3xl font-black text-amber-600" id="rep-skor-brm">0</p>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded-lg border border-rose-200 text-center relative">
+                            <div class="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">NILAI ASESMEN</div>
+                            <p class="text-rose-800 text-xs font-bold mb-1">NILAI AKHIR BERLATIH</p>
+                            <p class="text-4xl font-black text-rose-600" id="rep-skor-brl">0</p>
+                            <p class="text-xs font-bold mt-1" id="rep-predikat">PREDIKAT</p>
+                        </div>
+                    </div>
+
+                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-1">2. Analisis Level Kognitif (Berlatih)</h3>
+                    <table class="w-full text-sm mb-6 border-collapse border border-gray-200">
+                        <tr class="bg-gray-100 text-gray-700"><th class="border p-2 text-left">Level Kognitif</th><th class="border p-2">Benar</th><th class="border p-2">Poin</th></tr>
+                        <tr><td class="border p-2">Level 1 (Dasar & Pemahaman)</td><td class="border p-2 text-center" id="rep-l1-b">-</td><td class="border p-2 text-center" id="rep-l1-p">-</td></tr>
+                        <tr><td class="border p-2">Level 2 (Aplikasi Peta)</td><td class="border p-2 text-center" id="rep-l2-b">-</td><td class="border p-2 text-center" id="rep-l2-p">-</td></tr>
+                        <tr class="bg-rose-50 text-rose-800 font-bold"><td class="border p-2">Level 3 (Penalaran HOTS)</td><td class="border p-2 text-center" id="rep-l3-b">-</td><td class="border p-2 text-center" id="rep-l3-p">-</td></tr>
+                    </table>
+
+                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-1">3. Catatan Kurikulum Berbasis Cinta (KBC)</h3>
+                    <div class="bg-emerald-50 p-4 rounded-lg border-l-4 border-emerald-500 text-sm text-gray-800 leading-relaxed font-medium mb-6" id="rep-kbc"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT -->
+    <script>
+        // ⚠️ DEKLARASI URL GAS DI SINI (Ubah dengan URL Web App Anda nanti)
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbymvSJkWaoLY4ctuZBaqfmWY7TtQOXUvxnZxIyjGvDSPs0SFej6aALtV1a6Hcs4JML1/exec";
+
+        // --- DATA & STATE ---
+        const state = {
+            siswa: { nama: '', kelas: '' },
+            progress: { belajar: false, bermain: false, berlatih: false },
+            blj: { active: 0, answers: [] }, // max 6
+            // Ditambahkan: array untuk merekam jawaban user & statistik benar/salah
+            brm: { active: 0, score: 0, benar: 0, salah: 0, answers: [] }, 
+            brl: { active: 0, score: 0, l1:0, l2:0, l3:0, benar: 0, salah: 0, answers: [] }, 
+            panActive: 0
+        };
+
+        // Data Belajar (6 Slide)
+        const dataBelajar = [
+            {
+                judul: "1. Konsep Batas Wilayah & Peta Dunia",
+                quran: { arab: "وَجَعَلْنَاكُمْ شُعُوبًا وَقَبَائِلَ لِتَعَارَفُوا", arti: "...dan menjadikan kamu berbangsa-bangsa dan bersuku-suku supaya kamu saling kenal-mengenal. (QS. Al-Hujurat: 13)" },
+                isi: `<p class="mb-3">Jika kita melihat <strong>Peta Dunia</strong>, permukaan bumi dibagi menjadi daratan (benua) dan perairan (samudra). Di atas daratan tersebut, berdirilah berbagai negara, termasuk Indonesia. Setiap negara memiliki garis batas untuk menentukan kedaulatan dan luas wilayah yang diurusnya.</p>
+                      <p class="mb-3"><strong>KBC (Kurikulum Berbasis Cinta):</strong> Allah menciptakan bangsa dan batas negara bukan agar kita saling bermusuhan, melainkan agar kita merawat tanah air yang dititipkan (Cinta Tanah Air) sekaligus menghormati dan hidup rukun dengan tetangga negara lain (Cinta Sesama Insan).</p>`,
+                quiz: { tanya: "Tujuan utama ditetapkannya batas wilayah antar negara menurut nilai KBC dan Al-Qur'an adalah untuk...", opsi: ["A. Berperang merebut wilayah", "B. Merawat kedaulatan dan saling mengenal", "C. Menutup diri dari dunia luar"], jawab: 1 }
+            },
+            {
+                judul: "2. Letak Astronomis Indonesia",
+                quran: null,
+                isi: `<p class="mb-3">Pada Peta Dunia, selain batas nyata daratan dan lautan, terdapat garis khayal yang dibuat oleh ilmuwan yaitu Garis Lintang (mendatar) dan Garis Bujur (tegak). Ini disebut letak astronomis.</p>
+                      <p class="mb-3">Secara astronomis, wilayah Indonesia terletak di antara <strong>6° LU (Lintang Utara) – 11° LS (Lintang Selatan)</strong> dan <strong>95° BT (Bujur Timur) – 141° BT (Bujur Timur)</strong>. Letak inilah yang membuat Indonesia berada di garis khatulistiwa dan memiliki iklim tropis yang subur.</p>`,
+                quiz: { tanya: "Berdasarkan letak astronomisnya, garis bujur yang membatasi wilayah Indonesia adalah...", opsi: ["A. 95° BT – 141° BT", "B. 6° LU – 11° LS", "C. 0° LU – 90° LS"], jawab: 0 }
+            },
+            {
+                judul: "3. Letak Geografis (Posisi Silang Dunia)",
+                quran: { arab: "مَرَجَ الْبَحْرَيْنِ يَلْتَقِيَانِ", arti: "Dia membiarkan dua lautan mengalir yang keduanya kemudian bertemu. (QS. Ar-Rahman: 19)" },
+                isi: `<p class="mb-3">Lihatlah letak Indonesia di Peta Dunia. Negara kita memiliki posisi yang sangat strategis, sering disebut "Posisi Silang". Secara geografis, Indonesia diapit oleh dua benua besar dan dua samudra luas.</p>
+                      <p class="mb-3">Indonesia terletak di antara <strong>Benua Asia</strong> (di sebelah utara) dan <strong>Benua Australia</strong> (di sebelah selatan). Serta diapit oleh <strong>Samudra Hindia</strong> (barat dan selatan) dan <strong>Samudra Pasifik</strong> (timur dan utara).</p>
+                      <p class="mb-3"><strong>KBC:</strong> Kekayaan alam laut kita adalah anugerah. Kita wajib bersyukur dan mencintai lingkungan laut dengan tidak merusaknya.</p>`,
+                quiz: { tanya: "Dua benua yang mengapit negara Indonesia secara geografis adalah...", opsi: ["A. Benua Amerika dan Eropa", "B. Benua Asia dan Afrika", "C. Benua Asia dan Australia"], jawab: 2 }
+            },
+            {
+                judul: "4. Batas Wilayah Bagian Utara",
+                quran: null,
+                isi: `<p class="mb-3">Mari kita fokus pada bagian atas peta Indonesia. Di sebelah <strong>UTARA</strong>, Indonesia berbatasan langsung dengan daratan dan lautan beberapa negara tetangga.</p>
+                      <ul class="list-disc pl-5 mb-3 space-y-1">
+                        <li><strong>Batas Darat:</strong> Negara <em>Malaysia</em> (bagian timur/Pulau Kalimantan).</li>
+                        <li><strong>Batas Laut:</strong> Perairan Malaysia, <em>Singapura</em>, <em>Filipina</em>, dan Laut Cina Selatan.</li>
+                      </ul>
+                      <p class="mb-3">Menjaga perbatasan utara sangat penting karena menjadi jalur pelayaran internasional yang sibuk.</p>`,
+                quiz: { tanya: "Negara yang berbatasan darat langsung dengan Indonesia di Pulau Kalimantan (bagian utara) adalah...", opsi: ["A. Malaysia", "B. Singapura", "C. Filipina"], jawab: 0 }
+            },
+            {
+                judul: "5. Batas Wilayah Bagian Selatan & Barat",
+                quran: null,
+                isi: `<p class="mb-3">Di sebelah <strong>SELATAN</strong> (bagian bawah peta), Indonesia berbatasan darat dengan negara kecil yaitu <em>Timor Leste</em> (di Pulau Timor). Sedangkan batas lautnya berbatasan dengan perairan Australia dan Samudra Hindia.</p>
+                      <p class="mb-3">Di sebelah <strong>BARAT</strong> (sebelah kiri Pulau Sumatra), Indonesia tidak berbatasan darat dengan negara manapun. Batas di sebelah barat sepenuhnya adalah lautan yang luas, yaitu <strong>Samudra Hindia</strong>, dan perairan negara India (Kepulauan Andaman).</p>`,
+                quiz: { tanya: "Batas wilayah Indonesia di sebelah barat sepenuhnya berupa lautan, yaitu...", opsi: ["A. Samudra Pasifik", "B. Samudra Hindia", "C. Laut Cina Selatan"], jawab: 1 }
+            },
+            {
+                judul: "6. Batas Wilayah Bagian Timur",
+                quran: null,
+                isi: `<p class="mb-3">Di ujung paling <strong>TIMUR</strong> Indonesia (tepatnya di Pulau Papua), kita memiliki batas darat dan laut.</p>
+                      <ul class="list-disc pl-5 mb-3 space-y-1">
+                        <li><strong>Batas Darat:</strong> Berbatasan langsung dengan negara <em>Papua Nugini</em> (Papua New Guinea).</li>
+                        <li><strong>Batas Laut:</strong> Berbatasan dengan <em>Samudra Pasifik</em> yang membentang sangat luas.</li>
+                      </ul>
+                      <p class="mb-3"><strong>KBC:</strong> Dari Sabang (Barat) sampai Merauke (Timur), wilayah ini adalah titipan Allah. Buktikan cinta tanah airmu dengan belajar sungguh-sungguh agar kelak bisa menjaga dan memajukan bangsa di perbatasan!</p>`,
+                quiz: { tanya: "Negara yang berbatasan darat langsung dengan Indonesia di bagian timur (Pulau Papua) adalah...", opsi: ["A. Australia", "B. Timor Leste", "C. Papua Nugini"], jawab: 2 }
+            }
+        ];
+
+        // Data Bermain (10 Item, 5 Mechanics, Stimulus 100-200 kata)
+        const dataBermain = [
+            { // M1: Pilihan Ganda (100+ kata stimulus)
+                type: 'mcq',
+                teks: "Dalam sebuah buku geografi yang mengulas tentang Peta Dunia, disebutkan bahwa negara kepulauan terbesar di dunia memiliki letak astronomis yang sangat unik. Letak ini memanjang dari koordinat 95 derajat Bujur Timur yang melintasi ujung Pulau Sumatra, hingga 141 derajat Bujur Timur yang berada di ujung timur Pulau Papua. Sementara secara lintang, wilayahnya terbentang dari 6 derajat Lintang Utara hingga 11 derajat Lintang Selatan. Garis khatulistiwa membelah wilayah ini, memberikan iklim tropis dengan curah hujan yang melimpah sepanjang tahun. Berkat iklim ini, keanekaragaman hayati darat dan laut tumbuh dengan sangat subur. Para ilmuwan sepakat bahwa posisi ini adalah rahmat Tuhan bagi penduduk yang mendiaminya, sesuai dengan nilai Kurikulum Berbasis Cinta untuk merawat alam titipan-Nya.",
+                tanya: "Berdasarkan stimulus bacaan di atas, koordinat lintang yang mengapit wilayah negara kepulauan tersebut adalah...",
+                opsi: ["A. 6° LS – 11° LU", "B. 6° LU – 11° LS", "C. 95° LU – 141° LS"],
+                jawab: 1
+            },
+            { // M1: Pilihan Ganda
+                type: 'mcq',
+                teks: "Ahmad bersama teman-temannya sedang mengamati Globe (tiruan bola bumi) di ruang perpustakaan MI Salafiyah Syafiiyah. Guru IPAS mereka menjelaskan tentang posisi silang benua. Guru tersebut memutar globe dan menunjuk kawasan Asia Tenggara. 'Lihatlah anak-anak, posisi negara kita ibarat persimpangan jalan tol bagi jalur perdagangan dunia. Di atas kita membentang benua raksasa Asia, tempat banyak negara industri. Sementara jika kalian melihat ke bawah, ada benua terkecil di dunia yang bentuknya seperti pulau besar'. Interaksi dagang melalui jalur laut di antara dua daratan raksasa ini telah berlangsung sejak berabad-abad lampau, membawa masuk berbagai budaya dan ajaran agama ke nusantara.",
+                tanya: "Benua yang terletak di sebelah selatan wilayah Indonesia yang ditunjuk oleh guru pada Globe tersebut adalah...",
+                opsi: ["A. Benua Eropa", "B. Benua Amerika", "C. Benua Australia"],
+                jawab: 2
+            },
+            { // M2: Pilihan Ganda Kompleks (Checkbox - Multi Answer)
+                type: 'complex_mcq',
+                teks: "Sebagai seorang pelajar madrasah yang mengamalkan ajaran Kurikulum Berbasis Cinta (KBC), Aisyah ditugaskan meneliti batas-batas kedaulatan tanah air dari berbagai arah mata angin. Ia membaca laporan dari Badan Informasi Geospasial yang menjelaskan bahwa kedaulatan darat Indonesia berbatasan langsung dengan tiga negara tetangga. Hubungan baik dengan negara-negara tetangga ini wajib dipelihara karena Al-Qur'an memerintahkan kita untuk saling mengenal antar bangsa. Jika hubungan memburuk, wilayah perbatasan rawan terjadi konflik perebutan patok batas negara, penyelundupan barang ilegal, dan perusakan hutan di wilayah garis demarkasi. Aisyah kemudian mencatat nama-nama negara tersebut di buku catatannya.",
+                tanya: "Dari bacaan di atas, pilihlah DUA negara yang secara resmi berbatasan DARAT langsung dengan wilayah Indonesia! (Centang 2 jawaban)",
+                opsi: ["Malaysia", "Singapura", "Timor Leste", "Filipina"],
+                jawab: [0, 2] // Index 0 dan 2
+            },
+            { // M2: Pilihan Ganda Kompleks
+                type: 'complex_mcq',
+                teks: "Batas kelautan Indonesia tidak kalah luasnya dari daratan. Dalam Konvensi Hukum Laut Internasional, setiap negara kepulauan berhak atas laut teritorial, Zona Ekonomi Eksklusif (ZEE), dan landas kontinen. Jika kita melihat pada peta dunia, bagian luar sebelah barat pulau Sumatra berhadapan langsung dengan hamparan perairan tanpa ada daratan negara lain dalam jarak dekat, melainkan samudra luas. Begitu pula saat kita menggeser pandangan ke arah ujung timur Pulau Papua, setelah perbatasan laut Papua Nugini, membentang hamparan air terbesar di planet Bumi. Kekayaan laut di kedua samudra raksasa ini menjadi sumber protein bagi jutaan umat manusia.",
+                tanya: "Pilihlah DUA nama samudra luas yang secara geografis mengapit wilayah negara Indonesia berdasarkan teks di atas! (Centang 2 jawaban)",
+                opsi: ["Samudra Atlantik", "Samudra Pasifik", "Samudra Arktik", "Samudra Hindia"],
+                jawab: [1, 3]
+            },
+            { // M3: Menjodohkan (Tap-to-match 2 pasang)
+                type: 'match',
+                teks: "Negara Kesatuan Republik Indonesia memiliki patok-patok batas negara yang dijaga ketat oleh prajurit TNI. Penjagaan ini adalah bentuk cinta tanah air. Di sebuah pos perbatasan bagian timur, prajurit bertugas di belantara hutan Papua yang berbatasan dengan negara tetangga. Sementara di pos perbatasan lain yang terletak di selatan provinsi Nusa Tenggara Timur, prajurit menjaga perbatasan dengan negara yang dulunya pernah menjadi bagian dari provinsi ke-27 Indonesia. Para prajurit berbaur dan saling menghargai masyarakat dari kedua belah pihak negara, mewujudkan ukhuwah insaniyah lintas negara.",
+                tanya: "Jodohkanlah arah mata angin dengan nama negara yang berbatasan darat secara tepat dengan mengetuk pasangan kotak yang sesuai!",
+                pairs: [
+                    { left: "Sebelah Timur", right: "Papua Nugini", id: 1 },
+                    { left: "Sebelah Selatan", right: "Timor Leste", id: 2 }
+                ]
+            },
+            { // M3: Menjodohkan
+                type: 'match',
+                teks: "Pemahaman letak geografis dapat dibagi menjadi pemahaman letak astronomis dan posisi silang benua-samudra. Konsep ini membantu para navigator kapal niaga internasional. Sebuah kapal kargo dari Jepang berlayar menuju Afrika, melewati perairan kepulauan Indonesia. Sang kapten melihat koordinat di layar radarnya yang menunjukkan angka bujur timur dan lintang selatan. Ia sadar telah memasuki wilayah khatulistiwa. Dalam ilmu kelautan, batas wilayah sangat bergantung pada dua jenis pengukuran ruang spasial ini untuk memastikan legalitas perairan.",
+                tanya: "Jodohkan istilah berikut dengan pengertiannya yang tepat tentang letak Indonesia!",
+                pairs: [
+                    { left: "Letak Astronomis", right: "Garis Lintang & Bujur", id: 1 },
+                    { left: "Letak Geografis", right: "Diapit 2 Benua & 2 Samudra", id: 2 }
+                ]
+            },
+            { // M4: Mengurutkan (Tap in order)
+                type: 'sort',
+                teks: "Batas wilayah laut Indonesia ditetapkan melalui sebuah perjuangan diplomasi yang panjang, salah satunya Deklarasi Djuanda. Saat kita mengarungi samudra menggunakan kapal dari pantai utara Jawa hingga ke bagian terluar batas ZEE (Zona Ekonomi Eksklusif), kita akan melewati beberapa negara tetangga. Jika sebuah pesawat terbang melintas dari arah utara Indonesia, secara visual di peta ia akan melewati beberapa zona wilayah negara asing sebelum memasuki kedaulatan laut utara Indonesia.",
+                tanya: "Urutkan negara-negara berikut yang berbatasan di sebelah UTARA Indonesia, dari yang berupa perbatasan DARAT, lalu yang berupa perbatasan LAUT!",
+                items: ["Malaysia (Darat)", "Singapura (Laut)", "Filipina (Laut)"],
+                jawab: [0, 1, 2]
+            },
+            { // M4: Mengurutkan
+                type: 'sort',
+                teks: "Garis Lintang adalah garis khayal yang mengitari bumi sejajar dengan khatulistiwa. Wilayah Indonesia tidak sepenuhnya simetris; bagian daratan di sebelah selatan garis khatulistiwa ternyata membentang lebih jauh ke bawah dibandingkan bagian daratan di utara khatulistiwa. Guru meminta siswa mengamati rentang garis lintang ini pada peta dinding untuk mengasah kemampuan numerasi koordinat bumi mereka.",
+                tanya: "Urutkan angka batas Lintang astronomis Indonesia dari angka terkecil hingga terbesar!",
+                items: ["0 derajat (Khatulistiwa)", "6 derajat Lintang Utara", "11 derajat Lintang Selatan"],
+                jawab: [0, 1, 2] 
+            },
+            { // M5: Tap-to-Place (Simulated Drag Drop)
+                type: 'dnd',
+                teks: "Dalam kajian tafsir ayat 'Dia membiarkan dua lautan mengalir yang keduanya kemudian bertemu' (QS. Ar-Rahman: 19), banyak pakar geografi muslim yang menghubungkannya dengan pertemuan arus samudra yang berbeda suhu atau kadar garamnya. Di Indonesia, posisi silang memicu pergerakan arus lintas samudra yang membawa banyak plankton dan nutrisi, sehingga wilayah laut Indonesia sangat kaya akan ikan. Hal ini terjadi karena Indonesia menjadi 'jembatan' air raksasa antara lautan di sebelah barat/selatan dan lautan di sebelah timur.",
+                tanya: "Isilah titik-titik di bawah ini dengan mengetuk pilihan kata yang tepat di bawahnya!",
+                sentence: "Di sebelah Barat batas laut Indonesia adalah Samudra [HINDIA], sedangkan di sebelah Timur adalah Samudra [PASIFIK].",
+                options: ["PASIFIK", "HINDIA", "ATLANTIK"]
+            },
+            { // M5: Tap-to-Place
+                type: 'dnd',
+                teks: "Membangun rasa Cinta Tanah Air (nasionalisme) di daerah perbatasan membutuhkan pembangunan infrastruktur yang merata. Di Pulau Kalimantan, perbatasan darat antara Indonesia dan sebuah negara tetangga membentang lebih dari 2.000 kilometer melintasi pegunungan dan hutan tropis. Masyarakat Dayak di perbatasan ini saling berinteraksi baik untuk berniaga maupun kegiatan sosial. Pemerintah membangun Pos Lintas Batas Negara (PLBN) yang megah sebagai beranda depan negara yang membanggakan.",
+                tanya: "Isilah kotak kosong berikut berdasarkan konteks wilayah utara Indonesia!",
+                sentence: "Negara yang berbatasan darat langsung di pulau Kalimantan (bagian utara) adalah [MALAYSIA], yang ibu kotanya berada di Kuala Lumpur.",
+                options: ["SINGAPURA", "MALAYSIA", "THAILAND"]
+            }
+        ];
+
+        // Data Berlatih (10 Item, Berjenjang, HOTS, Stimulus 150-200 kata)
+        const dataBerlatih = [
+            // Level 1: Pemahaman (1-3) @8pts
+            {
+                level: 1, pts: 8,
+                teks: "Pada hari Senin, sekolah mengadakan upacara bendera. Kepala Madrasah memberikan amanat mengenai pentingnya menjaga kedaulatan tanah air, sejalan dengan prinsip Kurikulum Berbasis Cinta (KBC). Beliau membentangkan sebuah poster peta dunia berukuran besar. 'Anak-anak,' ucap beliau, 'Negara kita tidak berdiri sendirian di ruang hampa. Di sebelah timur, persis di pulau burung cendrawasih (Papua), tanah kita menempel berbatasan langsung dengan daratan negara asing yang juga memiliki keberagaman suku bangsa yang luar biasa. Kita harus menghormati mereka.' Dari penjelasan Kepala Madrasah, siswa kelas lima segera mengetahui nama negara tetangga yang dimaksud.",
+                tanya: "Berdasarkan amanat Kepala Madrasah, negara apa yang berbatasan darat secara langsung dengan Indonesia di bagian timur (Pulau Papua)?",
+                opsi: ["A. Australia", "B. Malaysia", "C. Papua Nugini", "D. Filipina"], jawab: 2
+            },
+            {
+                level: 1, pts: 8,
+                teks: "Indonesia adalah surga biodiversitas berkat lokasinya yang dilintasi oleh garis khayal ekuator atau khatulistiwa. Letak ini didefinisikan secara matematis melalui titik-titik astronomis. Ketika seorang penjelajah Eropa pertama kali datang memetakan kepulauan nusantara, ia mengukur bahwa batas paling ujung utara Indonesia, tepatnya di Pulau Weh, Nanggroe Aceh Darussalam, terletak pada sudut 6 derajat ke arah utara dari garis tengah bumi. Sementara batas paling selatannya, Pulau Rote di Nusa Tenggara Timur, merentang hingga 11 derajat ke arah kutub selatan. Data numerik ini tercatat abadi dalam literatur navigasi dunia.",
+                tanya: "Angka 6° LU – 11° LS dan 95° BT – 141° BT merupakan definisi dari letak wilayah Indonesia secara...",
+                opsi: ["A. Astronomis", "B. Geografis", "C. Geologis", "D. Historis"], jawab: 0
+            },
+            {
+                level: 1, pts: 8,
+                teks: "Kementerian Kelautan dan Perikanan sering melakukan patroli di batas perairan bagian barat pulau Sumatra. Kawasan laut lepas di sini sangat rawan terjadi pencurian ikan (illegal fishing) oleh kapal-kapal asing. Menariknya, jika sebuah kapal TNI Angkatan Laut terus berlayar ke arah barat menjauhi pulau Sumatra tanpa berbelok, mereka tidak akan menemukan daratan atau pulau besar milik negara tetangga dalam waktu beberapa minggu, melainkan hanya akan melihat bentangan air biru yang merupakan salah satu samudra terbesar di bumi, sebelum akhirnya mencapai pantai benua Afrika.",
+                tanya: "Bentangan air luas yang menjadi batas wilayah laut Indonesia sepenuhnya di bagian sebelah barat adalah...",
+                opsi: ["A. Samudra Atlantik", "B. Laut Cina Selatan", "C. Samudra Pasifik", "D. Samudra Hindia"], jawab: 3
+            },
+            // Level 2: Aplikasi (4-7) @10pts
+            {
+                level: 2, pts: 10,
+                teks: "Bayangkan kamu adalah seorang pilot pesawat terbang komersial. Rute penerbanganmu hari ini adalah dari Bandara Soekarno-Hatta (Jakarta) menuju kota Darwin di Australia Utara. Berdasarkan pengetahuan membaca peta dunia, pesawat akan lepas landas dari pulau Jawa lalu terbang lurus melintasi Samudra Hindia. Dalam perjalanan, kamu melihat indikator arah kompas (heading) pesawat menunjuk tepat ke satu arah mata angin secara konsisten hingga mendarat di daratan benua tersebut.",
+                tanya: "Berdasarkan rute penerbangan di atas, arah mata angin yang dituju oleh pesawat dari Jakarta ke Australia adalah ke arah...",
+                opsi: ["A. Utara", "B. Selatan", "C. Barat", "D. Timur"], jawab: 1
+            },
+            {
+                level: 2, pts: 10,
+                teks: "Seorang pengusaha ekspor-impor ingin mengirimkan satu kontainer penuh rempah-rempah dari pulau Jawa ke daratan utama Tiongkok (China). Kapal kargonya harus menyusuri jalur laut yang menjadi perbatasan antara sebelah utara pulau Kalimantan dan perairan kepulauan Filipina. Namun, rute ini sering terganggu cuaca buruk akibat badai siklon tropis yang terbentuk di perairan luas yang berada di utara wilayah batas laut Indonesia.",
+                tanya: "Laut luas berstatus sengketa internasional yang berada di batas sebelah utara perairan Indonesia (utara Kepulauan Natuna) dan sering dilewati jalur pelayaran dagang ke Asia Timur adalah...",
+                opsi: ["A. Laut Cina Selatan", "B. Laut Jawa", "C. Samudra Hindia", "D. Laut Banda"], jawab: 0
+            },
+            {
+                level: 2, pts: 10,
+                teks: "Dalam pelajaran IPAS KBC, guru memberikan studi kasus numerasi: Garis lintang 0 derajat (khatulistiwa) membelah Indonesia tepat di tengah pulau Sumatra, Kalimantan, dan Sulawesi. Batas utara Indonesia adalah 6 derajat LU (selisih 6 derajat dari ekuator). Sedangkan batas selatannya adalah 11 derajat LS (selisih 11 derajat dari ekuator). Jika setiap 1 derajat lintang jaraknya setara dengan sekitar 111 kilometer di permukaan bumi.",
+                tanya: "Menganalisis data angka tersebut, kesimpulan geometris yang paling tepat mengenai proporsi daratan Indonesia terhadap garis khatulistiwa adalah...",
+                opsi: ["A. Luas daratan di utara khatulistiwa jauh lebih panjang/luas dibanding di selatan", "B. Daratan Indonesia membentang lebih panjang ke arah wilayah selatan khatulistiwa dibanding ke utaranya", "C. Garis khatulistiwa membelah daratan Indonesia simetris sama panjang", "D. Tidak ada daratan Indonesia di wilayah Lintang Selatan"], jawab: 1
+            },
+            {
+                level: 2, pts: 10,
+                teks: "Masyarakat nelayan tradisional di perbatasan kepulauan Sangihe (Sulawesi Utara) memiliki adat yang ramah (Cinta Sesama) dengan masyarakat adat di negara pulau tetangganya, yaitu Filipina. Terkadang, perahu nelayan terbawa arus hingga melewati garis imajiner batas Zona Ekonomi Eksklusif laut tanpa sengaja. Berdasarkan pemetaan pada globe, pulau Miangas adalah pulau terluar milik Indonesia di bagian utara yang letak geografisnya secara fisik justru lebih dekat ke daratan pulau Mindanao (Filipina) dibandingkan ke ibu kota Jakarta.",
+                tanya: "Fakta geografis bahwa letak kepulauan utara Indonesia berbatasan langsung dengan perairan Filipina membuktikan bahwa letak Indonesia secara benua berdekatan dengan daratan utama...",
+                opsi: ["A. Benua Australia bagian timur", "B. Benua Asia Tenggara daratan", "C. Benua Amerika bagian barat", "D. Benua Eropa bagian selatan"], jawab: 1
+            },
+            // Level 3: HOTS (8-10) @12pts
+            {
+                level: 3, pts: 12,
+                teks: "Permasalahan perbatasan di perairan kepulauan Natuna (bagian utara batas laut Indonesia) seringkali memicu ketegangan diplomatik dengan negara-negara asing yang kapalnya masuk untuk menangkap ikan secara ilegal. Pemerintah Indonesia merespons dengan meningkatkan patroli, memperketat hukum ZEE (Zona Ekonomi Eksklusif), namun tetap mengedepankan jalur perundingan perdamaian. Berdasarkan perspektif Kurikulum Berbasis Cinta (KBC) yang mengajarkan cinta tanah air sekaligus menolak permusuhan (ukhuwah).",
+                tanya: "Kebijakan penyelesaian konflik batas laut yang paling merepresentasikan kemampuan penalaran (HOTS) serta nilai KBC moderat bagi pemerintah Indonesia adalah...",
+                opsi: ["A. Memutus hubungan diplomatik dan langsung menembak hancur semua kapal asing tanpa peringatan", "B. Mengalah dan memberikan sebagian wilayah laut agar tidak terjadi peperangan", "C. Mengamankan laut secara tegas hukum sesuai regulasi PBB (UNCLOS) dibarengi upaya diplomasi damai untuk menegaskan peta kedaulatan", "D. Membangun tembok beton raksasa di tengah lautan Cina Selatan"], jawab: 2
+            },
+            {
+                level: 3, pts: 12,
+                teks: "Perhatikan analisis data berikut: Posisi silang (diapit 2 samudra & 2 benua) membuat Indonesia dilalui Angin Muson yang berubah arah setiap 6 bulan. Hal ini menyebabkan musim hujan dan kemarau. Ketika Angin Muson Barat berhembus dari arah Benua Asia melintasi perairan Samudra Pasifik dan Laut Cina Selatan yang luas, angin tersebut membawa uap air dalam volume masif. Sebaliknya, Angin Muson Timur bertiup dari daratan gurun luas di Benua Australia yang kering.",
+                tanya: "Berdasarkan analisis logis antara batas geografis dan iklim, mengapa Angin Muson Timur yang bertiup dari arah batas selatan (Australia) menyebabkan musim kemarau panjang di Indonesia?",
+                opsi: ["A. Karena angin dari selatan (Australia) melewati sedikit laut dan membawa udara kering dari daratan gurun pasir", "B. Karena benua Australia letaknya jauh di kutub selatan sehingga sangat dingin dan beku", "C. Karena batas selatan Indonesia terhalang oleh pegunungan tinggi di benua Asia", "D. Karena Samudra Hindia di sebelah barat menguap seluruhnya"], jawab: 0
+            },
+            {
+                level: 3, pts: 12,
+                teks: "Fenomena pemanasan global (climate change) menyebabkan bongkahan es di kutub utara dan selatan mencair, sehingga permukaan air laut di seluruh dunia perlahan naik. Menurut riset lembaga kelautan internasional, kenaikan muka air laut ini merupakan ancaman serius bagi batas-batas kedaulatan negara kepulauan seperti Indonesia. Beberapa pulau karang kecil tak berpenghuni di batas terluar wilayah samudera Indonesia (seperti di perairan barat dan utara) berisiko tenggelam total secara permanen dalam 50 tahun ke depan.",
+                tanya: "Berdasarkan evaluasi dampak lingkungan (Cinta Kelestarian Alam), mengapa tenggelamnya sebuah pulau kecil tak berpenghuni di batas terluar sangat merugikan kedaulatan hukum dan ekonomi batas wilayah Indonesia?",
+                opsi: ["A. Karena Indonesia akan kehilangan tempat wisata turis asing", "B. Karena hilangnya pulau terluar menyebabkan titik pangkal ukur batas laut ZEE sejauh 200 mil akan menyusut ke dalam, mempersempit luas kedaulatan laut negara", "C. Karena ikan-ikan akan berpindah hidup ke daratan pulau besar", "D. Karena negara tetangga akan segera membangun pulau buatan di atasnya"], jawab: 1
+            }
+        ];
+
+        // --- KONEKSI GOOGLE APPS SCRIPT (GAS) ---
+        function syncDataSoal() {
+            if(!GAS_URL || GAS_URL === "URL_GAS_ANDA_DISINI") {
+                notifikasi("URL GAS belum disetting dalam kode HTML!", "error"); return;
+            }
+            notifikasi("Sinkronisasi soal ke database...", "info");
+            
+            let soalList = [];
+            dataBermain.forEach((d, i) => {
+                soalList.push({
+                    jenis: 'Bermain',
+                    pertanyaan: d.tanya,
+                    opsi: d.opsi ? d.opsi.join(' | ') : 'Interaktif (Menjodohkan/Mengurutkan/DnD)',
+                    kunci: Array.isArray(d.jawab) ? d.jawab.join(',') : (d.jawab !== undefined ? d.jawab : 'Lengkap di Skrip')
+                });
+            });
+            dataBerlatih.forEach((d, i) => {
+                soalList.push({
+                    jenis: 'Berlatih (Level ' + d.level + ')',
+                    pertanyaan: d.tanya,
+                    opsi: d.opsi.join(' | '),
+                    kunci: d.opsi[d.jawab]
+                });
+            });
+
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "saveSoal", data: soalList })
+            }).then(r => r.json()).then(res => {
+                notifikasi("Data soal berhasil disinkronisasi ke Google Sheets!", "success");
+            }).catch(e => {
+                notifikasi("Gagal melakukan sinkronisasi.", "error");
+            });
+        }
+
+        function kirimDataHasil() {
+            if(!GAS_URL || GAS_URL === "URL_GAS_ANDA_DISINI") {
+                console.warn("URL GAS belum disetting. Laporan hanya PDF lokal.");
+                return;
+            }
+            notifikasi("Menyimpan hasil evaluasi siswa ke database guru...", "info");
+            
+            // Format Detail Jawaban
+            const detailJawaban = "--- MENU BERMAIN (LITERASI) ---\n" + 
+                                  state.brm.answers.map((a, i) => `Tantangan ${i+1}: ${a}`).join("\n") +
+                                  "\n\n--- MENU BERLATIH (ASESMEN) ---\n" + 
+                                  state.brl.answers.map((a, i) => `Soal ${i+1}: ${a}`).join("\n");
+            
+            const payload = {
+                action: "saveHasil",
+                nama: state.siswa.nama,
+                kelas: state.siswa.kelas,
+                benar: state.brm.benar + state.brl.benar,
+                salah: state.brm.salah + state.brl.salah,
+                detail: detailJawaban
+            };
+
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            }).then(r => r.json()).then(res => {
+                if(res.status === 'success') {
+                    notifikasi("Data berhasil disimpan di sistem guru!", "success");
+                }
+            }).catch(e => {
+                console.error(e);
+                notifikasi("Terjadi kesalahan jaringan saat menyimpan database. Laporan PDF tetap dapat diunduh.", "warning");
+            });
+        }
+
+        // --- CORE FUNCTIONS ---
+        function elm(id) { return document.getElementById(id); }
+
+        function showScreen(id) {
+            ['splash', 'cover', 'login', 'panduan', 'menu', 'modul-belajar', 'modul-bermain', 'modul-berlatih', 'modul-laporan']
+                .forEach(sc => {
+                    const el = elm(sc);
+                    if(el) {
+                        el.classList.add('hidden');
+                        if(id === sc) {
+                            el.classList.remove('hidden');
+                            if(sc==='menu') updateDashboard();
+                        }
+                    }
+                });
+        }
+
+        function notifikasi(msg, type='info') {
+            const wrap = document.createElement('div');
+            const colors = { info: 'bg-blue-600', success: 'bg-emerald-600', warning: 'bg-amber-600', error: 'bg-red-600' };
+            wrap.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg text-sm font-bold flex items-center gap-2 slide-up pointer-events-auto`;
+            wrap.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='warning'?'exclamation-triangle':'info-circle'}"></i> ${msg}`;
+            elm('notif-container').appendChild(wrap);
+            setTimeout(() => { wrap.style.opacity='0'; setTimeout(()=>wrap.remove(),300); }, 3000);
+        }
+
+        function toggleModal(id) {
+            const modal = elm(id);
+            const content = modal.querySelector('div');
+            if(modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+            } else {
+                modal.classList.add('opacity-0'); content.classList.add('scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
+
+        // --- INIT & LOGIN ---
+        window.onload = () => {
+            setTimeout(() => { showScreen('cover'); }, 1800); // splash duration
+        };
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const nama = elm('inp-nama').value.trim();
+            const kelas = elm('inp-kelas').value;
+            if(nama && kelas) {
+                state.siswa.nama = nama;
+                state.siswa.kelas = kelas;
+                elm('welcome-name').innerText = nama;
+                elm('dash-nama').innerText = nama;
+                elm('dash-kelas').innerText = kelas;
+                elm('ava-inisial').innerText = nama.charAt(0).toUpperCase();
+                showScreen('panduan');
+                renderPanduan();
+            }
+        }
+
+        // --- PANDUAN ---
+        function renderPanduan() {
+            for(let i=0; i<3; i++) {
+                elm(`slide-pan-${i}`).classList.toggle('hidden', i !== state.panActive);
+                elm('pan-dots').children[i].className = i === state.panActive ? "w-3 h-3 rounded-full bg-emerald-600" : "w-3 h-3 rounded-full bg-gray-300";
+            }
+            elm('btn-pan-prev').classList.toggle('hidden', state.panActive === 0);
+            elm('btn-pan-next').classList.toggle('hidden', state.panActive === 2);
+            elm('btn-pan-masuk').classList.toggle('hidden', state.panActive !== 2);
+        }
+        function gantiPanduan(dir) {
+            state.panActive += dir;
+            if(state.panActive < 0) state.panActive = 0;
+            if(state.panActive > 2) state.panActive = 2;
+            renderPanduan();
+        }
+
+        // --- MENU DASHBOARD ---
+        function updateDashboard() {
+            if(state.progress.belajar) {
+                elm('card-bermain').classList.remove('cursor-not-allowed', 'opacity-70');
+                elm('card-bermain').classList.add('cursor-pointer', 'hover:shadow-lg', 'hover:border-amber-400');
+                elm('lock-bermain').classList.add('hidden');
+                elm('status-bermain').className = "bg-amber-100 text-amber-700 py-1.5 rounded-full text-xs font-bold";
+                elm('status-bermain').innerHTML = '<i class="fas fa-unlock"></i> TERBUKA';
+            }
+            if(state.progress.bermain) {
+                elm('card-berlatih').classList.remove('cursor-not-allowed', 'opacity-70');
+                elm('card-berlatih').classList.add('cursor-pointer', 'hover:shadow-lg', 'hover:border-rose-400');
+                elm('lock-berlatih').classList.add('hidden');
+                elm('status-berlatih').className = "bg-rose-100 text-rose-700 py-1.5 rounded-full text-xs font-bold";
+                elm('status-berlatih').innerHTML = '<i class="fas fa-unlock"></i> TERBUKA';
+            }
+        }
+
+        function bukaModul(m) {
+            if(m === 'belajar') { showScreen('modul-belajar'); renderBelajar(); }
+            if(m === 'bermain' && state.progress.belajar) { showScreen('modul-bermain'); state.brm = {active:0, score:0, benar:0, salah:0, answers:[]}; renderBermain(); }
+            else if(m === 'bermain') notifikasi("Selesaikan menu BELAJAR terlebih dahulu!", "warning");
+            if(m === 'berlatih' && state.progress.bermain) { showScreen('modul-berlatih'); state.brl={active:0,score:0,l1:0,l2:0,l3:0,benar:0,salah:0,answers:[]}; renderBerlatih(); }
+            else if(m === 'berlatih') notifikasi("Selesaikan menu BERMAIN terlebih dahulu!", "warning");
+        }
+
+        // --- MODUL 1: BELAJAR ---
+        function renderBelajar() {
+            const d = dataBelajar[state.blj.active];
+            elm('blj-counter').innerText = `${state.blj.active + 1}/${dataBelajar.length}`;
+            
+            let quranHtml = '';
+            if(d.quran) {
+                quranHtml = `<div class="bg-amber-50 p-4 rounded-xl mb-4 border border-amber-200">
+                                <p class="arab-text text-amber-900 mb-2">${d.quran.arab}</p>
+                                <p class="text-xs md:text-sm text-gray-600 italic">${d.quran.arti}</p>
+                             </div>`;
+            }
+
+            const isAnswered = state.blj.answers[state.blj.active] !== undefined;
+            const answeredIdx = state.blj.answers[state.blj.active];
+
+            let quizHtml = `
+                <div class="mt-8 bg-blue-50 p-5 rounded-xl border border-blue-200">
+                    <h4 class="font-bold text-blue-900 mb-3 flex items-center gap-2"><i class="fas fa-question-circle"></i> Tantangan Pemahaman</h4>
+                    <p class="text-sm text-gray-800 font-medium mb-4">${d.quiz.tanya}</p>
+                    <div class="space-y-2">
+                        ${d.quiz.opsi.map((opt, i) => {
+                            let btnClass = "w-full text-left p-3 rounded-lg border-2 border-white bg-white hover:border-blue-300 shadow-sm text-sm font-medium text-gray-700 transition-colors";
+                            if(isAnswered) {
+                                if(i === d.quiz.jawab) btnClass = "w-full text-left p-3 rounded-lg border-2 border-emerald-500 bg-emerald-100 shadow-sm text-sm font-bold text-emerald-800";
+                                else if (i === answeredIdx && i !== d.quiz.jawab) btnClass = "w-full text-left p-3 rounded-lg border-2 border-red-400 bg-red-50 shadow-sm text-sm font-medium text-red-600 opacity-60";
+                                else btnClass = "w-full text-left p-3 rounded-lg border-2 border-white bg-gray-50 opacity-50 shadow-sm text-sm font-medium text-gray-500 pointer-events-none";
+                            }
+                            return `<button ${isAnswered ? 'disabled' : `onclick="jawabBelajar(${i})"`} class="${btnClass}">${opt}</button>`;
+                        }).join('')}
+                    </div>
+                    ${isAnswered ? (answeredIdx===d.quiz.jawab ? '<p class="mt-3 text-emerald-600 font-bold text-sm slide-up"><i class="fas fa-check"></i> Jawaban Tepat! Lanjut ke materi berikutnya.</p>' : '<p class="mt-3 text-red-500 font-bold text-sm slide-up"><i class="fas fa-times"></i> Kurang tepat, perhatikan kembali materinya.</p>') : ''}
+                </div>
+            `;
+
+            elm('blj-content').innerHTML = `
+                <div class="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 fade-in">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-blue-500 pb-2 inline-block">${d.judul}</h3>
+                    ${quranHtml}
+                    <div class="text-gray-700 leading-relaxed text-sm md:text-base format-content">${d.isi}</div>
+                    ${quizHtml}
+                </div>
+            `;
+
+            elm('btn-blj-prev').classList.toggle('hidden', state.blj.active === 0);
+            const canNext = isAnswered && (state.blj.active < dataBelajar.length - 1);
+            elm('btn-blj-next').classList.toggle('hidden', !canNext);
+            const canFinish = isAnswered && (state.blj.active === dataBelajar.length - 1);
+            elm('btn-blj-finish').classList.toggle('hidden', !canFinish);
+        }
+
+        function jawabBelajar(ansIdx) {
+            state.blj.answers[state.blj.active] = ansIdx;
+            const correct = ansIdx === dataBelajar[state.blj.active].quiz.jawab;
+            if(correct) notifikasi("Benar!", "success");
+            else notifikasi("Coba telaah lagi teksnya.", "error");
+            renderBelajar();
+        }
+
+        function navBelajar(dir) {
+            state.blj.active += dir;
+            renderBelajar();
+        }
+
+        function finishBelajar() {
+            state.progress.belajar = true;
+            notifikasi("Materi Selesai! Menu BERMAIN telah TERBUKA.", "success");
+            showScreen('menu');
+        }
+
+        // --- MODUL 2: BERMAIN (Gamifikasi) ---
+        let brmMatchSelection = null; 
+        let brmSortSelection = [];
+
+        function renderBermain() {
+            const d = dataBermain[state.brm.active];
+            elm('brm-counter').innerText = `${state.brm.active + 1}/${dataBermain.length}`;
+            
+            let mekanikHtml = '';
+            if(d.type === 'mcq') {
+                mekanikHtml = `<div class="space-y-3">
+                    ${d.opsi.map((opt, i) => `<button onclick="cekBermainMCQ(${i})" class="w-full text-left p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-amber-400 font-bold text-gray-700 transition-all text-sm shadow-sm">${opt}</button>`).join('')}
+                </div>`;
+            } 
+            else if (d.type === 'complex_mcq') {
+                mekanikHtml = `<div class="space-y-3 mb-4" id="cmcq-container">
+                    ${d.opsi.map((opt, i) => `
+                        <label class="flex items-center p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-amber-400 cursor-pointer transition-all shadow-sm">
+                            <input type="checkbox" value="${i}" class="cmcq-cb w-5 h-5 text-amber-500 rounded border-gray-300 focus:ring-amber-400">
+                            <span class="ml-3 font-bold text-gray-700 text-sm">${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <button onclick="cekBermainCMCQ()" class="w-full py-3 bg-amber-500 text-white font-bold rounded-xl shadow-md">Kunci Jawaban</button>`;
+            }
+            else if (d.type === 'match') {
+                brmMatchSelection = { left: null, right: null };
+                const rightItems = [...d.pairs].sort(() => Math.random() - 0.5);
+                mekanikHtml = `
+                    <div class="bg-blue-50 p-3 rounded-lg text-xs font-bold text-blue-800 mb-4 text-center"><i class="fas fa-hand-pointer"></i> Cara main: Ketuk kotak kiri, lalu ketuk pasangan yang tepat di kotak kanan.</div>
+                    <div class="flex gap-4">
+                        <div class="flex-1 space-y-3" id="match-left">
+                            ${d.pairs.map(p => `<div id="ml-${p.id}" onclick="handleMatch('left', ${p.id})" class="interactive-item p-4 bg-white border-2 border-gray-300 rounded-xl text-center font-bold text-sm shadow-sm text-gray-700">${p.left}</div>`).join('')}
+                        </div>
+                        <div class="flex-1 space-y-3" id="match-right">
+                            ${rightItems.map(p => `<div id="mr-${p.id}" onclick="handleMatch('right', ${p.id})" class="interactive-item p-4 bg-white border-2 border-gray-300 rounded-xl text-center font-bold text-sm shadow-sm text-gray-700">${p.right}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            else if (d.type === 'sort') {
+                brmSortSelection = []; 
+                const shuffledIdx = d.items.map((_, i) => i).sort(() => Math.random() - 0.5);
+                mekanikHtml = `
+                    <div class="bg-blue-50 p-3 rounded-lg text-xs font-bold text-blue-800 mb-4 text-center"><i class="fas fa-sort-numeric-down"></i> Cara main: Ketuk kotak di bawah ini secara berurutan sesuai urutan yang benar!</div>
+                    <div class="space-y-3 mb-4" id="sort-options">
+                        ${shuffledIdx.map(idx => `<div id="so-${idx}" onclick="handleSort(${idx}, '${d.items[idx]}')" class="interactive-item p-4 bg-white border-2 border-gray-300 rounded-xl font-bold text-sm shadow-sm text-gray-700 flex items-center"><span class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xs mr-3 sort-num"></span>${d.items[idx]}</div>`).join('')}
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="resetSort()" class="px-4 py-3 bg-gray-300 text-gray-700 font-bold rounded-xl flex-1">Reset</button>
+                        <button onclick="cekBermainSort()" class="px-4 py-3 bg-amber-500 text-white font-bold rounded-xl flex-[2]">Kunci Jawaban</button>
+                    </div>
+                `;
+            }
+            else if (d.type === 'dnd') {
+                let parts = d.sentence.split(/(\[[A-Z]+\])/);
+                let sentenceHtml = parts.map((part, i) => {
+                    if(part.match(/\[[A-Z]+\]/)) {
+                        let ans = part.replace(/[\[\]]/g, '');
+                        return `<span class="inline-block min-w-[120px] mx-1 border-b-2 border-dashed border-gray-400 text-center font-bold text-amber-600 cursor-pointer bg-white px-2 py-1 rounded" id="dnd-slot-${i}" data-ans="${ans}" onclick="clearDndSlot(${i})">...</span>`;
+                    }
+                    return part;
+                }).join('');
+
+                mekanikHtml = `
+                    <div class="bg-blue-50 p-3 rounded-lg text-xs font-bold text-blue-800 mb-4 text-center"><i class="fas fa-hand-pointer"></i> Cara main: Ketuk pilihan kata di bawah, ia akan mengisi titik-titik kosong pertama.</div>
+                    <p class="text-lg font-medium leading-loose bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-6">${sentenceHtml}</p>
+                    <div class="flex flex-wrap justify-center gap-3 mb-6" id="dnd-options">
+                        ${d.options.map((opt, i) => `<button id="dnd-opt-${i}" onclick="fillDndSlot('${opt}', ${i})" class="px-5 py-2 bg-amber-100 border-2 border-amber-300 text-amber-800 font-bold rounded-lg hover:bg-amber-200 shadow-sm">${opt}</button>`).join('')}
+                    </div>
+                    <button onclick="cekBermainDnd()" class="w-full py-3 bg-amber-500 text-white font-bold rounded-xl shadow-md">Kunci Jawaban</button>
+                `;
+            }
+
+            elm('brm-content').innerHTML = `
+                <div class="max-w-2xl mx-auto">
+                    <div class="w-full bg-amber-200 h-1.5 rounded-full mb-6 overflow-hidden">
+                        <div class="bg-amber-600 h-full transition-all" style="width: ${(state.brm.active / 10) * 100}%"></div>
+                    </div>
+                    <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-amber-100 mb-6 slide-up">
+                        <div class="text-xs font-bold text-amber-700 mb-2 uppercase tracking-wide">Misi ${state.brm.active + 1}</div>
+                        <div class="text-gray-600 text-sm leading-relaxed mb-4 text-justify font-medium bg-amber-50/50 p-4 rounded-xl border border-amber-50">${d.teks}</div>
+                        <h3 class="font-bold text-gray-900 text-base mb-6">${d.tanya}</h3>
+                        ${mekanikHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function lanjutBermain(isBenar, detailJawabanStr = "") {
+            if(isBenar) {
+                state.brm.score += 10;
+                state.brm.benar += 1;
+                notifikasi("Hebat! Jawaban Tepat (+10 Poin)", "success");
+            } else {
+                state.brm.salah += 1;
+                notifikasi("Ah, kurang tepat! Tetap semangat.", "error");
+            }
+            
+            // Rekam jawaban
+            state.brm.answers.push(detailJawabanStr || (isBenar ? "Benar (Interaktif)" : "Salah (Interaktif)"));
+            
+            setTimeout(() => {
+                if(state.brm.active < 9) {
+                    state.brm.active++;
+                    renderBermain();
+                } else {
+                    selesaiBermain();
+                }
+            }, 1200);
+        }
+
+        function cekBermainMCQ(idx) { 
+            const isBenar = (idx === dataBermain[state.brm.active].jawab);
+            lanjutBermain(isBenar, dataBermain[state.brm.active].opsi[idx]); 
+        }
+        
+        function cekBermainCMCQ() {
+            const cbs = document.querySelectorAll('.cmcq-cb');
+            let selected = [];
+            cbs.forEach(cb => { if(cb.checked) selected.push(parseInt(cb.value)); });
+            
+            const isBenar = JSON.stringify(selected.sort()) === JSON.stringify(dataBermain[state.brm.active].jawab.sort());
+            let selectedTexts = selected.map(i => dataBermain[state.brm.active].opsi[i]);
+            lanjutBermain(isBenar, selectedTexts.length ? selectedTexts.join(', ') : 'Tidak ada yang dicentang');
+        }
+
+        let matchedCount = 0;
+        function handleMatch(side, id) {
+            brmMatchSelection[side] = id;
+            document.querySelectorAll(`#match-${side} .interactive-item`).forEach(el => el.classList.remove('selected'));
+            elm(`m${side.charAt(0)}-${id}`).classList.add('selected');
+
+            if(brmMatchSelection.left && brmMatchSelection.right) {
+                if(brmMatchSelection.left === brmMatchSelection.right) {
+                    elm(`ml-${brmMatchSelection.left}`).classList.add('matched');
+                    elm(`mr-${brmMatchSelection.right}`).classList.add('matched');
+                    brmMatchSelection = {left:null, right:null};
+                    matchedCount++;
+                    if(matchedCount === dataBermain[state.brm.active].pairs.length) {
+                        matchedCount = 0;
+                        lanjutBermain(true, "Berhasil menjodohkan semua pasangan secara tepat.");
+                    }
+                } else {
+                    notifikasi("Pasangan tidak cocok", "warning");
+                    document.querySelectorAll('.interactive-item').forEach(el => {
+                        if(!el.classList.contains('matched')) el.classList.remove('selected');
+                    });
+                    brmMatchSelection = {left:null, right:null};
+                    // Bisa ditambahkan logika pengurangan skor atau penambahan salah jika diinginkan
+                }
+            }
+        }
+
+        function handleSort(idx, val) {
+            const el = elm(`so-${idx}`);
+            if(!brmSortSelection.includes(idx)) {
+                brmSortSelection.push(idx);
+                el.classList.add('selected', 'border-amber-500');
+                el.querySelector('.sort-num').innerText = brmSortSelection.length;
+                el.querySelector('.sort-num').classList.replace('bg-gray-200','bg-amber-500');
+                el.querySelector('.sort-num').classList.replace('text-gray-500','text-white');
+            }
+        }
+        function resetSort() {
+            brmSortSelection = [];
+            document.querySelectorAll('#sort-options .interactive-item').forEach(el => {
+                el.classList.remove('selected', 'border-amber-500');
+                el.querySelector('.sort-num').innerText = '';
+                el.querySelector('.sort-num').className = "w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xs mr-3 sort-num";
+            });
+        }
+        function cekBermainSort() {
+            const isBenar = JSON.stringify(brmSortSelection) === JSON.stringify(dataBermain[state.brm.active].jawab);
+            let urutan = brmSortSelection.map(idx => dataBermain[state.brm.active].items[idx]);
+            lanjutBermain(isBenar, urutan.length ? urutan.join(' -> ') : 'Belum diurutkan');
+        }
+
+        function fillDndSlot(opt, btnIdx) {
+            const slots = document.querySelectorAll('span[id^="dnd-slot-"]');
+            for(let slot of slots) {
+                if(slot.innerText === '...') {
+                    slot.innerText = opt;
+                    slot.setAttribute('data-filled-by', btnIdx);
+                    slot.classList.replace('text-amber-600', 'text-gray-900');
+                    slot.classList.replace('border-dashed', 'border-solid');
+                    elm(`dnd-opt-${btnIdx}`).classList.add('opacity-30', 'pointer-events-none');
+                    break;
+                }
+            }
+        }
+        function clearDndSlot(slotId) {
+            const slot = elm(`dnd-slot-${slotId}`);
+            if(slot.innerText !== '...') {
+                const btnIdx = slot.getAttribute('data-filled-by');
+                elm(`dnd-opt-${btnIdx}`).classList.remove('opacity-30', 'pointer-events-none');
+                slot.innerText = '...';
+                slot.removeAttribute('data-filled-by');
+                slot.classList.replace('text-gray-900', 'text-amber-600');
+                slot.classList.replace('border-solid', 'border-dashed');
+            }
+        }
+        function cekBermainDnd() {
+            const slots = document.querySelectorAll('span[id^="dnd-slot-"]');
+            let isBenar = true;
+            let diisi = 0;
+            let diisiTexts = [];
+            slots.forEach(slot => {
+                diisiTexts.push(slot.innerText);
+                if(slot.innerText === '...') isBenar = false;
+                else diisi++;
+                if(slot.innerText !== slot.getAttribute('data-ans')) isBenar = false;
+            });
+            if(diisi < slots.length) { notifikasi("Isi semua bagian kosong!", "warning"); return; }
+            lanjutBermain(isBenar, "Mengisi rumpang dengan: " + diisiTexts.join(', '));
+        }
+
+        function selesaiBermain() {
+            state.progress.bermain = true;
+            elm('brm-content').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-center slide-up pt-10">
+                    <i class="fas fa-trophy text-7xl text-amber-500 mb-6 float-anim"></i>
+                    <h2 class="text-3xl font-black text-amber-900 mb-2">Misi Selesai!</h2>
+                    <p class="text-gray-600 mb-6">Kamu telah menuntaskan simulasi tantangan perbatasan.</p>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-amber-200 mb-8">
+                        <p class="text-xs font-bold text-gray-500 mb-1">SKOR AKHIR</p>
+                        <p class="text-5xl font-black text-amber-600">${state.brm.score} <span class="text-lg text-gray-400">/ 100</span></p>
+                    </div>
+                    <button onclick="showScreen('menu')" class="bg-amber-600 text-white font-bold py-4 px-10 rounded-full shadow-lg hover:bg-amber-700 pulse-anim">Buka Asesmen Berlatih <i class="fas fa-unlock ml-2"></i></button>
+                </div>
+            `;
+            notifikasi("Menu BERLATIH kini TERBUKA!", "success");
+        }
+
+        // --- MODUL 3: BERLATIH (Asesmen Formal) ---
+        function renderBerlatih() {
+            const d = dataBerlatih[state.brl.active];
+            elm('brl-counter').innerText = `${state.brl.active + 1}/${dataBerlatih.length}`;
+            
+            let badge = '';
+            if(d.level===1) badge = '<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold ml-2 uppercase">L1: Pemahaman</span>';
+            if(d.level===2) badge = '<span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold ml-2 uppercase">L2: Aplikasi</span>';
+            if(d.level===3) badge = '<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded font-bold ml-2 uppercase"><i class="fas fa-fire"></i> L3: HOTS</span>';
+
+            elm('brl-content').innerHTML = `
+                <div class="max-w-2xl mx-auto slide-up">
+                    <div class="flex justify-between items-end mb-4">
+                        <div class="font-black text-rose-900 flex items-center">SOAL EVALUASI ${badge}</div>
+                        <div class="text-xs font-bold text-gray-400">Bobot: ${d.pts} Pts</div>
+                    </div>
+                    
+                    <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border-t-4 border-rose-500 mb-6">
+                        <div class="text-gray-700 text-sm leading-relaxed mb-6 text-justify bg-rose-50 p-4 rounded-xl border border-rose-100">${d.teks}</div>
+                        <h3 class="font-bold text-gray-900 text-base mb-6">${d.tanya}</h3>
+                        
+                        <div class="space-y-3">
+                            ${d.opsi.map((opt, i) => `<button onclick="jawabBerlatih(${i}, ${d.jawab}, ${d.level}, ${d.pts})" class="w-full text-left p-4 rounded-xl bg-gray-50 border-2 border-gray-100 hover:border-rose-300 hover:bg-rose-50 font-bold text-gray-700 transition-colors text-sm">${opt}</button>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function jawabBerlatih(ansIdx, correctIdx, level, pts) {
+            // Rekam jawaban teks yang dipilih
+            state.brl.answers.push(dataBerlatih[state.brl.active].opsi[ansIdx]);
+
+            if(ansIdx === correctIdx) {
+                state.brl.score += pts;
+                state.brl.benar += 1;
+                if(level===1) state.brl.l1++;
+                if(level===2) state.brl.l2++;
+                if(level===3) state.brl.l3++;
+            } else {
+                state.brl.salah += 1;
+            }
+            
+            if(state.brl.active < 9) {
+                state.brl.active++;
+                renderBerlatih();
+            } else {
+                selesaiBerlatih();
+            }
+        }
+
+        function selesaiBerlatih() {
+            state.progress.berlatih = true;
+            generateLaporanData();
+            showScreen('modul-laporan');
+            notifikasi("Evaluasi selesai! Laporan PDF otomatis dibuat.", "success");
+            
+            // KIRIM DATA KE GOOGLE SHEETS
+            kirimDataHasil();
+        }
+
+        // --- LAPORAN ---
+        function generateLaporanData() {
+            elm('rep-nama').innerText = `: ${state.siswa.nama}`;
+            elm('rep-kelas').innerText = `: ${state.siswa.kelas} / Fase B`;
+            
+            const date = new Date();
+            const dateStr = `${date.getDate()} ${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'][date.getMonth()]} ${date.getFullYear()}`;
+            elm('rep-tgl').innerText = `: ${dateStr}`;
+
+            elm('rep-skor-brm').innerText = state.brm.score;
+            elm('rep-skor-brl').innerText = state.brl.score;
+
+            elm('rep-l1-b').innerText = `${state.brl.l1}/3`; elm('rep-l1-p').innerText = `${state.brl.l1 * 8}/24`;
+            elm('rep-l2-b').innerText = `${state.brl.l2}/4`; elm('rep-l2-p').innerText = `${state.brl.l2 * 10}/40`;
+            elm('rep-l3-b').innerText = `${state.brl.l3}/3`; elm('rep-l3-p').innerText = `${state.brl.l3 * 12}/36`;
+
+            let predikat = ""; let pCol = "";
+            if(state.brl.score >= 90) { predikat = "SANGAT BAIK"; pCol = "text-emerald-600"; }
+            else if(state.brl.score >= 75) { predikat = "BAIK"; pCol = "text-blue-600"; }
+            else if(state.brl.score >= 60) { predikat = "CUKUP"; pCol = "text-amber-600"; }
+            else { predikat = "PERLU BIMBINGAN"; pCol = "text-red-600"; }
+            
+            elm('rep-predikat').innerText = predikat;
+            elm('rep-predikat').className = `text-xs font-black mt-1 ${pCol}`;
+
+            let kbcHtml = `Ananda <strong>${state.siswa.nama}</strong> `;
+            if(state.brl.l3 >= 2) {
+                kbcHtml += "memiliki kemampuan penalaran tingkat tinggi (HOTS) yang amat baik. Ananda mampu mengaitkan wawasan peta batas wilayah dengan sikap nasionalisme dan kecintaan menjaga perdamaian serta lingkungan batas negara, sejalan dengan nilai KBC.";
+            } else if ((state.brl.l1 + state.brl.l2) >= 5) {
+                kbcHtml += "telah memahami letak negara di peta dunia secara baik. Disarankan untuk lebih banyak membaca teks analitis tentang kedaulatan laut dan konservasi lingkungan agar kepekaan (Cinta Alam & Tanah Air) semakin terasah.";
+            } else {
+                kbcHtml += "perlu mengulang materi batas wilayah dan letak geografis. Ingatlah bahwa Allah menitipkan alam nusantara untuk dijaga batas-batasnya dengan penuh kasih sayang dan tanggung jawab.";
+            }
+            elm('rep-kbc').innerHTML = kbcHtml;
+        }
+
+        function cetakPDF() {
+            const el = elm('report-content');
+            if(typeof window.html2pdf !== 'undefined') {
+                const opt = {
+                    margin: 10,
+                    filename: `Laporan_IPAS_${state.siswa.nama.replace(/\s+/g,'_')}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                el.classList.add('p-8');
+                notifikasi("Menyiapkan PDF...", "info");
+                html2pdf().set(opt).from(el).save().then(() => {
+                    el.classList.remove('p-8');
+                    notifikasi("Berhasil mengunduh PDF!", "success");
+                });
+            } else {
+                window.print();
+            }
+        }
+    </script>
+</body>
+</html>
